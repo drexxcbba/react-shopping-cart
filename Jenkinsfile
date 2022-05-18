@@ -23,7 +23,7 @@ pipeline {
             )
           }
         }
-      stage('Upload to Articatory') {
+        stage('Upload to Articatory') {
             steps {
                 sh 'npm publish'
             }
