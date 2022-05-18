@@ -23,6 +23,11 @@ pipeline {
             )
           }
         }
+      stage('Upload to Articatory') {
+            steps {
+                sh 'npm publish'
+            }
+        }
         stage('Docker Build') {
           steps {
             sh 'docker build -t drexxcbba/docker-react-shopping-cart:latest .'
