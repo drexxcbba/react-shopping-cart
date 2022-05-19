@@ -19,7 +19,7 @@ pipeline {
             }
         }
       
-        stage('snyk testing') {
+        stage('Snyk testing') {
           steps {
             echo 'Testing...'
             snykSecurity(
