@@ -1,17 +1,24 @@
 pipeline {
     
     agent any
+  
+    environment{
+        CI = true
+        ARTIFACTORY_ACCESS_TOKEN = credentials('jenkins-artifactory-access-token')
+    }
     
     tools{
         nodejs 'node-lts'
     }
     
     stages {
+      
         stage('Installing dependecies'){
             steps{
                 sh 'npm install'
             }
         }
+      
         stage('snyk testing') {
           steps {
             echo 'Testing...'
@@ -23,11 +30,37 @@ pipeline {
             )
           }
         }
+      
+        stage('run build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+      
+        stage('Create a tar file'){
+            steps{
+                sh "tar cvzf react-shopping-cart-${BUILD_NUMBER}.tar.gz build"
+            }
+        }
+      
+        stage('Upload to Artifactory') {
+          agent {
+            docker {
+              image 'releases-docker.jfrog.io/jfrog/jfrog-cli-v2:2.2.0' 
+              reuseNode true
+            }
+          }
+          steps {
+            sh "jfrog rt upload --url https://drexxcbba.jfrog.io/artifactory --access-token ${ARTIFACTORY_ACCESS_TOKEN} react-shopping-cart-${BUILD_NUMBER}.tar.gz react-shopping-cart-generic-local/"
+          }
+        }
+      
         stage('Docker Build') {
           steps {
             sh 'docker build -t drexxcbba/docker-react-shopping-cart:latest .'
           }
         }
+      
         stage('Testing the container with Snyk') {
           steps{
             snykSecurity( 
@@ -40,6 +73,7 @@ pipeline {
             )
           }
         }
+      
         stage('Docker Push') {
           steps {
             withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
@@ -48,6 +82,7 @@ pipeline {
             }
           }
         }
+      
         stage('Docker pull & Docker run') {
           steps{
             script{
