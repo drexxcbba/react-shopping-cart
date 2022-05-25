@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 RUN mkdir -p build
 
-COPY --from=builder /usr/src/app/build build
+COPY build build
 
 EXPOSE 3000
 
